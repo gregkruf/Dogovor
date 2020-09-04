@@ -40,6 +40,17 @@ namespace работа_с_БД
 
             conn.Close();
 
+            string connectionString = "server=localhost;user=root;database=sgndb;password=Piramida-10;";
+            MySqlConnection conn2 = new MySqlConnection(connectionString);
+
+            conn2.Open();
+            string querry2 = "update users Set names = 'gorge' where id = 1";
+
+            MySqlCommand command2 = new MySqlCommand(querry2, conn2);
+            command2.ExecuteNonQuery();
+
+
+            conn2.Close();
 
         }
     }
