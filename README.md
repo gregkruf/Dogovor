@@ -1,5 +1,3 @@
-# Dogovor
-test program for dogovor
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,6 +37,19 @@ namespace работа_с_БД
 
 
             conn.Close();
+
+            string connectionStr = "server=localhost;user=root;database=sgndb;password=Piramida-10;";
+            MySqlConnection conn = new MySqlConnection(connectionStr);
+
+            conn.Open();
+            string querry = "insert into users (id, names, sign, date, age) values (6, 'tom', 'ttk', '2000-01-01', 20)";
+
+            MySqlCommand command = new MySqlCommand(querry, conn);
+            command.ExecuteNonQuery();
+
+
+            conn.Close();
+
 
 
         }
