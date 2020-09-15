@@ -1,46 +1,115 @@
-# Dogovor
-test program for dogovor
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Data.SqlClient;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MySql.Data.MySqlClient;
+using System.Windows.Forms;
+using System.Configuration;
 
-namespace работа_с_БД
+namespace Dogovor
 {
-    class Program
+    public partial class Form_Dogovor : Form
     {
-        static void Main(string[] args)
+        private SqlConnection sqlConnection = null;
+        public Form_Dogovor()
         {
-            string connectionStr = "server=localhost;user=root;database=sgndb;password=Piramida-10;";
-            MySqlConnection conn = new MySqlConnection(connectionStr);
+            InitializeComponent();
+        }
 
-            conn.Open();
-            string sql = "Select names from users where id = 4";
+        private async void Form1_Load(object sender, EventArgs e)
+        {
+            string connectionString = @"Data Source=(LocalDB)\v11.0;AttachDbFilename=D:\Sangrinik\Dogovor\Dogovor\Dogovora.mdf;Integrated Security=True";
+            
+            sqlConnection = new SqlConnection(connectionString);
 
-            MySqlCommand command = new MySqlCommand(sql, conn);
+            await sqlConnection.OpenAsync();
 
-            string name = command.ExecuteScalar().ToString();
-            Console.WriteLine(name);
-            Console.WriteLine("-----");
+            listView1.GridLines = true;
+            listView1.FullRowSelect = true;
+            listView1.View = View.Details;
 
-            string sql1 = "Select id, names from users where age = 22";
-            MySqlCommand command1 = new MySqlCommand(sql1, conn);
+            
+            ContextMenuStrip contextMenu = new ContextMenuStrip();
+            listView1.ContextMenuStrip = ContextMenu;
+            
 
-            MySqlDataReader reader = command1.ExecuteReader();
-            while(reader.Read())
+            listView1.Columns.Add("Номер в базе");
+            listView1.Columns.Add("Номер договора");
+            listView1.Columns.Add("Дата создания");
+            listView1.Columns.Add("ID контрагента");
+            listView1.Columns.Add("Дата исполнения");
+            listView1.Columns.Add("Дата окончания договора");
+            listView1.Columns.Add("Сумма по договору");
+            listView1.Columns.Add("Платеж");
+            listView1.Columns.Add("ID Пункта по 44ФЗ");
+
+
+
+        }
+
+        private void Form_Dogovor_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (sqlConnection != null && sqlConnection.State != ConnectionState.Closed)
+                sqlConnection.Close();
+        }
+
+        private async Task LoadContractsAsync() //Select
+        {
+            SqlDataReader sqlReader = null;
+
+            SqlCommand getContractsCommand = new SqlCommand("Select * From [Contracts]", sqlConnection);
+
+            try
             {
-                Console.WriteLine(reader[0].ToString() + "  " + reader[1].ToString());
+                listView1.Items.Clear();
+                sqlReader = await getContractsCommand.ExecuteReaderAsync();
+
+                while (await sqlReader.ReadAsync())
+                {
+                    ListViewItem item = new ListViewItem(new string[]{
+                        Convert.ToString(sqlReader["Id"]),
+                        Convert.ToString(sqlReader["Number_Contract"]),
+                        Convert.ToString(sqlReader["Date_Contr"]),
+                        Convert.ToString(sqlReader["Id_Partner"]),
+                        Convert.ToString(sqlReader["Date_Execution"]),
+                        Convert.ToString(sqlReader["Date_Finishing"]),
+                        Convert.ToString(sqlReader["Sum_Money"]),
+                        Convert.ToString(sqlReader["Payment"]),
+                        Convert.ToString(sqlReader["Id_Point_44FZ"])
+                    });
+
+                    listView1.Items.Add(item);
+                    
+                }
 
             }
-            reader.Close();
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                if (sqlReader != null && !sqlReader.IsClosed)
+                {
+                    sqlReader.Close();
+                }
+            }
+        }
 
+        private async void buttonSelectContracts(object sender, EventArgs e)
+        {
+            await LoadContractsAsync();
+        }
 
+        private void buttonInsertContracts(object sender, EventArgs e)
+        {
+            INSERT_Contracts insert = new INSERT_Contracts(sqlConnection);
 
-            conn.Close();
-
-
+            insert.Show();
         }
     }
 }
